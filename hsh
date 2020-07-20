@@ -91,10 +91,11 @@ hsh_bundle() {
 		then
 		    git --work-tree "$HSH_DIR/BUNDLE/root" \
 			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-			show ".gitmomdules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
-		    git --work-tree "$HSH_DIR/BUNDLE/root" \
-			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+			show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
+		    cd "$HSH_DIR/BUNDLE/root"
+		    git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
 			submodule update --init --recursive
+		    cd -
 		    rm "$HSH_DIR/BUNDLE/root/.gitmodules"
 		fi
 		hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
@@ -754,10 +755,9 @@ hsh_submodule() {
         esac
         shift
     done
-    
     trap "hsh_submodule_cleanup" EXIT HUP INT QUIT ABRT TERM
     [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
-    hsh_git "$hs_repo" show ".gitmomdules" > "$HSH_ROOT/.gitmodules"
+    hsh_git "$hs_repo" show "HEAD:.gitmomdules" > "$HSH_ROOT/.gitmodules"
     hsh_git "$hs_repo" submodule "$@"
     [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
 }
