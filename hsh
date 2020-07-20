@@ -71,6 +71,7 @@ hsh_bundle() {
     do
         if [ -d "$HSH_DIR/repos/$hb_repo" ]
         then
+	    echo "# $hb_repo"
             cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos" 
             if [ "$hb_repo" = "hsh" ]
             then
@@ -86,9 +87,16 @@ hsh_bundle() {
 			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
 			reset --hard HEAD
 		fi
-		git --work-tree "$HSH_DIR/BUNDLE/root" \
-		    --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-		    submodule update --init --recursive
+		if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$'
+		then
+		    git --work-tree "$HSH_DIR/BUNDLE/root" \
+			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+			show ".gitmomdules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
+		    git --work-tree "$HSH_DIR/BUNDLE/root" \
+			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+			submodule update --init --recursive
+		    rm "$HSH_DIR/BUNDLE/root/.gitmodules"
+		fi
 		hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
 	    fi
 	    if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
@@ -722,6 +730,38 @@ hsh_remove() {
 
 }
 
+hsh_submodule_usage() {
+    git submodule -h
+}
+
+hsh_submodule_cleanup() {
+    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
+}
+
+hsh_submodule() {
+    while [ $# -ne 0 ]
+    do
+        case "$1" in
+            -h|--help)
+                hsh_submodule_usage
+                return 0
+                ;;
+            *)
+                hs_repo="$1"
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+    
+    trap "hsh_submodule_cleanup" EXIT HUP INT QUIT ABRT TERM
+    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
+    hsh_git "$hs_repo" show ".gitmomdules" > "$HSH_ROOT/.gitmodules"
+    hsh_git "$hs_repo" submodule "$@"
+    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
+}
+
 hsh_url_to_name() {
     # remove .git or /.git
     hutn_name="${1%.git}"
@@ -816,6 +856,9 @@ case "$h_action" in
         ;;
     remove)
         hsh_remove "$@"
+        ;;
+    submodule)
+        hsh_submodule "$@"
         ;;
     version)
         hsh_version "$@" 
