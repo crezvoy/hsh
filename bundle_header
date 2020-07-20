@@ -107,7 +107,12 @@ fi
 
 ls -1 "$tmp_dir/repos" | while IFS= read -r repo
 do
-    fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
+    if [ "$repo" = "hsh" ]
+    then
+        fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)/bin"
+    else
+        fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
+    fi
 done
 
 cp -rfP "$tmp_dir/repos" "$hsh_dir"
