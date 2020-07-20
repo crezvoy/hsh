@@ -86,17 +86,20 @@ hsh_bundle() {
 			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
 			reset --hard HEAD
 		fi
+		git --work-tree "$HSH_DIR/BUNDLE/root" \
+		    --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+		    submodule update --init --recursive
 		hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
 	    fi
 	    if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
-            then
-                hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
+	    then
+		hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
 	    fi
-            if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
-            then
-                hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
+	    if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
+	    then
+		hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
 	    fi
-        else
+	else
             hsh_die "repository '$hb_repo' does not exists"
         fi
     done
