@@ -91,7 +91,7 @@ mkdir "$tmp_dir"
 trap "cleanup \"$tmp_dir\"" EXIT HUP INT QUIT ABRT TERM
 
 BUNDLE_START=$(awk '/^__HSH_BUNDLE_CONTENT__/ { print NR + 1; exit 0; }' "$0")
-tail -n+$BUNDLE_START "$0" | tar xz -C "$tmp_dir" \
+tail -n+$BUNDLE_START "$0" | tar -xz --overwrite -C "$tmp_dir" \
     || die "fail to extract bundle"
 
 if [ ! -e "$bin_dir" ]
