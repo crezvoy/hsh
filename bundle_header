@@ -21,7 +21,7 @@ cleanup() {
 	then
 	    rm -rf "$(pwd)/.hsh"
 	fi
-	# rm -rf "$1"
+	rm -rf "$1"
     fi
 }
 
@@ -133,7 +133,7 @@ do
     run_hook "$(ls -1 "$tmp_dir/hooks" | head -n 1)"
 done
 
-# rm -rf "$tmp_dir"
+rm -rf "$tmp_dir"
 
 exit $?
 
