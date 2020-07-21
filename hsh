@@ -379,7 +379,7 @@ hsh_dependency() {
             $0 clone "$1"
             if hsh_git "$hd_repo" ls-files | grep -q '\.hshdependencies' 
             then
-                hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | sed "\$ a $1" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
+                hd_sha1="$( (hsh_git "$hd_repo" show HEAD:.hshdependencies; echo $1) | sort -u | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --add --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
 		hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             else
