@@ -16,7 +16,7 @@ hsh_bundle_cleanup() {
     if [ -e "$HSH_DIR/BUNDLE" ]
     then
         [ -e "$1" ] && rm "$1"
-        [ -e "$HSH_DIR/BUNDLE_LIST" ] && "$HSH_DIR/BUNDLE_LIST"
+        [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
         rm -rf "$HSH_DIR/BUNDLE"
         return 1
     fi
@@ -87,13 +87,14 @@ hsh_bundle() {
 			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
 			reset --hard HEAD
 		fi
-		if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$'
+		if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$' >/dev/null
 		then
 		    git --work-tree "$HSH_DIR/BUNDLE/root" \
 			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
 			show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
 		    cd "$HSH_DIR/BUNDLE/root"
 		    git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+			--work-tree "$HSH_DIR/BUNDLE/root" \
 			submodule update --init --recursive
 		    cd -
 		    rm "$HSH_DIR/BUNDLE/root/.gitmodules"
