@@ -71,7 +71,7 @@ hsh_bundle() {
     do
         if [ -d "$HSH_DIR/repos/$hb_repo" ]
         then
-	    echo "# $hb_repo"
+        echo "# $hb_repo"
             cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos" 
             if [ "$hb_repo" = "hsh" ]
             then
@@ -80,36 +80,36 @@ hsh_bundle() {
                     reset --hard HEAD
                 hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE"
             else
-		hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
-		if [ $hb_nr_files -ne 0 ] 
-		then
-		    git --work-tree "$HSH_DIR/BUNDLE/root" \
-			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-			reset --hard HEAD
-		fi
-		if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$' >/dev/null
-		then
-		    git --work-tree "$HSH_DIR/BUNDLE/root" \
-			--git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-			show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
-		    cd "$HSH_DIR/BUNDLE/root"
-		    git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-			--work-tree "$HSH_DIR/BUNDLE/root" \
-			submodule update --init --recursive
-		    cd -
-		    rm "$HSH_DIR/BUNDLE/root/.gitmodules"
-		fi
-		hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
-	    fi
-	    if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
-	    then
-		hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
-	    fi
-	    if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
-	    then
-		hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
-	    fi
-	else
+        hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
+        if [ $hb_nr_files -ne 0 ]
+        then
+            git --work-tree "$HSH_DIR/BUNDLE/root" \
+            --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+            reset --hard HEAD
+        fi
+        if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$' >/dev/null
+        then
+            git --work-tree "$HSH_DIR/BUNDLE/root" \
+            --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+            show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
+            cd "$HSH_DIR/BUNDLE/root"
+            git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+            --work-tree "$HSH_DIR/BUNDLE/root" \
+            submodule update --init --recursive
+            cd -
+            rm "$HSH_DIR/BUNDLE/root/.gitmodules"
+        fi
+        hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
+        fi
+        if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
+        then
+        hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
+        fi
+        if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
+        then
+        hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
+        fi
+    else
             hsh_die "repository '$hb_repo' does not exists"
         fi
     done
@@ -166,7 +166,7 @@ hsh_clone() {
     hcl_url="$(hsh_complete_url "$hcl_url")"
     hcl_name="$(hsh_url_to_name "$hcl_url")"
 
-	if [ ! -e "$HSH_DIR/repos/$hcl_name" ]
+    if [ ! -e "$HSH_DIR/repos/$hcl_name" ]
     then
         trap "hsh_clone_cleanup \"$hcl_name\"" EXIT HUP INT QUIT ABRT TERM
         git clone --no-checkout "$hcl_url" "$HSH_DIR/CLONE"
@@ -382,19 +382,19 @@ hsh_dependency() {
             then
                 hd_sha1="$( (hsh_git "$hd_repo" show HEAD:.hshdependencies; echo $1) | sort -u | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --add --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-		hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             else
                 hd_sha1="$(echo "$1" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --add --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-		hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
-	    fi
+        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+        fi
             ;;
         rm)
             if hsh_git "$hd_repo" ls-files | grep -q '\.hshdependencies' 
             then
                 hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | sed "\,^$1\$,d" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-		hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             fi
             ;;
         *)
@@ -565,10 +565,10 @@ hsh_hook() {
             export HSH_ROOT="$hh_root"
             export HSH_REPOSITORY="$hh_repo"
             export HSH_ACTION="$hh_action"
-	    if [ -n "${hh_bundle_root-}" ]
-	    then
+        if [ -n "${hh_bundle_root-}" ]
+        then
                 export HSH_BUNDLE_ROOT="$hh_bundle_root"
-	    fi
+        fi
 
             hsh_git "$hh_repo" show HEAD:h.sh | sh -s
         )
@@ -620,8 +620,8 @@ hsh_init() {
         hsh_init_usage
         return 1
     fi
-	hi_repo_dir="$HSH_DIR/repos/$hi_repo"
-	hi_tmp_dir="$HSH_DIR/INIT"
+    hi_repo_dir="$HSH_DIR/repos/$hi_repo"
+    hi_tmp_dir="$HSH_DIR/INIT"
 
     if [ -e "$hi_repo_dir" ]
     then
@@ -634,7 +634,7 @@ hsh_init() {
     #      and then setup HEAD and master branch config
     git init "$hi_tmp_dir"
     mv "$hi_tmp_dir/.git" "$hi_repo_dir"        
-	hsh_config_repo "$hi_repo"
+    hsh_config_repo "$hi_repo"
     rmdir "$hi_tmp_dir"
 }
 
@@ -703,7 +703,7 @@ hsh_remove() {
         hsh_remove_usage
         return 1
     fi
-	hr_repo_dir="$HSH_DIR/repos/$hr_repo"
+    hr_repo_dir="$HSH_DIR/repos/$hr_repo"
     [ -e "$hr_repo_dir" ] || return 0
 
     hr_deps="$(hsh_list_dependent_repo_r "$hr_repo" | sort -u)"

@@ -17,11 +17,11 @@ die() {
 cleanup() {
     if [ -e "$1" ]
     then
-	if [ -e "$(pwd)/.hsh" ]
-	then
-	    rm -rf "$(pwd)/.hsh"
-	fi
-	rm -rf "$1"
+    if [ -e "$(pwd)/.hsh" ]
+    then
+        rm -rf "$(pwd)/.hsh"
+    fi
+    rm -rf "$1"
     fi
 }
 
@@ -35,20 +35,20 @@ run_hook() {
     [ -e "$tmp_dir/hooks/$1" ] || return
     if [ -e "$tmp_dir/dependencies/$1" ]
     then
-	while IFS= read -r entry
-	do
-	    d="${entry%.git}"
-	    d="${d%/}"
-	    d="${d##*/}"
-	    run_hook "$d"
-	done < "$tmp_dir/dependencies/$1"
+    while IFS= read -r entry
+    do
+        d="${entry%.git}"
+        d="${d%/}"
+        d="${d##*/}"
+        run_hook "$d"
+    done < "$tmp_dir/dependencies/$1"
     fi
     (
-	export HSH_ROOT="$(pwd)"
-	export HSH_ACTION="bundle-out"
-	export HSH_REPOSITORY="$1"
-	export HSH_BUNDLE_ROOT="$tmp_dir/repos"
-	sh $tmp_dir/hooks/$1
+    export HSH_ROOT="$(pwd)"
+    export HSH_ACTION="bundle-out"
+    export HSH_REPOSITORY="$1"
+    export HSH_BUNDLE_ROOT="$tmp_dir/repos"
+    sh $tmp_dir/hooks/$1
     )
     rm "$tmp_dir/hooks/$1"
 }
@@ -56,24 +56,24 @@ run_hook() {
 while [ $# -ne 0 ]
 do
     case "$1" in
-	-h|--help)
-	    usage
-	    exit 0
-	    ;;
-	-C)
-	    shift
-	    [ $# -eq 0 ] && die "missing value for parameter '-C'"
-	    dir="$1"
-	    ;;
-	-b|--bin)
-	    shift
-	    [$tmp_dir/root $# -eq 0 ] && \
-		die "missing value for parameter --hsh-dir"
-	    bin_dir="$1"
-	    ;;
-	*)
-	    die "unknown option '$1'"
-	    ;;
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    -C)
+        shift
+        [ $# -eq 0 ] && die "missing value for parameter '-C'"
+        dir="$1"
+        ;;
+    -b|--bin)
+        shift
+        [$tmp_dir/root $# -eq 0 ] && \
+        die "missing value for parameter --hsh-dir"
+        bin_dir="$1"
+        ;;
+    *)
+        die "unknown option '$1'"
+        ;;
     esac
     shift
 done
@@ -109,9 +109,9 @@ ls -1 "$tmp_dir/repos" | while IFS= read -r repo
 do
     if [ "$repo" = "hsh" ]
     then
-	fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)/bin"
+    fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)/bin"
     else
-	fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
+    fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
     fi
 done
 
@@ -122,9 +122,9 @@ do
     dest="$(pwd)$(echo "$entry" | sed s,$tmp_dir/root,,)"
     if [ -d "$entry" ]
     then 
-	[ ! -d $dest ] && mkdir "$dest"
+    [ ! -d $dest ] && mkdir "$dest"
     else
-	cp -fP "$entry" "$dest"
+    cp -fP "$entry" "$dest"
     fi
 done
 

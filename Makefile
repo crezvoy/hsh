@@ -14,12 +14,12 @@ $(test_cases): %: t/%.sh hsh t/testenv
 	@t/testenv $(TEST_SHELL) $< >$@.err 2>&1; \
 	if [ $$? = 0 ]; then \
 		printf ' \033[32m✔\033[0m\n'; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		true; \
- 	else \
+	else \
 		printf ' \033[31m✘\033[0m\n'; \
 		cat "$@.err"; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		false; \
 	fi
 
@@ -29,27 +29,27 @@ bash-completion: t/bash-completion hsh t/testenv
 	@bash t/testenv bash t/bash-completion >$@.err 2>&1; \
 	if [ $$? = 0 ]; then \
 		printf ' \033[32m✔\033[0m\n'; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		true; \
- 	else \
+	else \
 		printf ' \033[31m✘\033[0m\n'; \
 		cat "$@.err"; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		false; \
 	fi
-	
+
 .PHONY: $(interactive_cases)
 $(interactive_cases): %: t/%.run hsh t/testenv
 	@printf "%-28s" "$@"
 	@t/testenv $(TEST_SHELL) $< >$@.err 2>&1; \
 	if [ $$? = 0 ]; then \
 		printf ' \033[32m✔\033[0m\n'; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		true; \
 	else \
 		printf ' \033[31m✘\033[0m\n'; \
 		cat "$@.err"; \
-	    rm "$@.err"; \
+		rm "$@.err"; \
 		false; \
 	fi
 
