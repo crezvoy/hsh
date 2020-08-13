@@ -2,7 +2,7 @@
 all:
 
 test_cases=$(subst t/,,$(subst .sh,,$(wildcard t/*.sh)))
-interactive-cases=$(subst t/,,$(subst .run,,$(wildcard t/*.run)))
+interactive_cases=$(subst t/,,$(subst .run,,$(wildcard t/*.run)))
 
 ifndef $(TEST_SHELL)
 TEST_SHELL=$(SHELL)
@@ -57,7 +57,7 @@ $(interactive_cases): %: t/%.run hsh t/testenv
 check: $(test_cases) bash-completion
 
 .PHONY: interactive-check
-interactive-check: $(interactive-cases)
+interactive-check: $(interactive_cases)
 
 
 .PHONY: clean

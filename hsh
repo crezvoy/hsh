@@ -13,13 +13,13 @@ EOF
 }
 
 hsh_bundle_cleanup() {
-    if [ -e "$HSH_DIR/BUNDLE" ]
-    then
-        [ -e "$1" ] && rm "$1"
-        [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
-        rm -rf "$HSH_DIR/BUNDLE"
-        return 1
-    fi
+    # if [ -e "$HSH_DIR/BUNDLE" ]
+    # then
+    # [ -e "$1" ] && rm "$1"
+    # [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
+    # rm -rf "$HSH_DIR/BUNDLE"
+    # return 1
+    # fi
     return 0
 }
 
@@ -71,45 +71,40 @@ hsh_bundle() {
     do
         if [ -d "$HSH_DIR/repos/$hb_repo" ]
         then
-        echo "# $hb_repo"
-            cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos" 
-            if [ "$hb_repo" = "hsh" ]
+            echo "# $hb_repo"
+            hb_prefix="$(hsh_git "$hb_repo" config core.worktree | sed "s,^$HSH_ROOT,,")"
+            cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos"
+            hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
+            if [ $hb_nr_files -ne 0 ]
             then
-                git --work-tree "$HSH_DIR/BUNDLE" \
+                [ -e "$HSH_DIR/BUNDLE/root$hb_prefix" ] || mkdir -p "$HSH_DIR/BUNDLE/root$hb_prefix"
+                git --work-tree "$HSH_DIR/BUNDLE/root$hb_prefix" \
                     --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
                     reset --hard HEAD
-                hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE"
-            else
-        hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
-        if [ $hb_nr_files -ne 0 ]
-        then
-            git --work-tree "$HSH_DIR/BUNDLE/root" \
-            --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-            reset --hard HEAD
-        fi
-        if hsh_git "$hb_repo" ls-files | grep '^.gitmodules$' >/dev/null
-        then
-            git --work-tree "$HSH_DIR/BUNDLE/root" \
-            --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-            show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root/.gitmodules"
-            cd "$HSH_DIR/BUNDLE/root"
-            git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
-            --work-tree "$HSH_DIR/BUNDLE/root" \
-            submodule update --init --recursive
-            cd -
-            rm "$HSH_DIR/BUNDLE/root/.gitmodules"
-        fi
-        hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
-        fi
-        if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
-        then
-        hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
-        fi
-        if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
-        then
-        hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
-        fi
-    else
+            fi
+            if hsh_git "$hb_repo" ls-files | grep -q '^.gitmodules$'
+            then
+                git --work-tree "$HSH_DIR/BUNDLE/root$hb_prefix" \
+                    --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+                    show  "HEAD:.gitmodules" > "$HSH_DIR/BUNDLE/root$hb_prefix/.gitmodules"
+                cd "$HSH_DIR/BUNDLE/root$hb_prefix"
+                git --work-tree "$HSH_DIR/BUNDLE/root$hb_prefix" \
+                    --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" \
+                    submodule update --init --recursive
+                cd -
+                rm "$HSH_DIR/BUNDLE/root$hb_prefix/.gitmodules"
+            fi
+            git --git-dir "$HSH_DIR/BUNDLE/repos/$hb_repo" config core.worktree "$hb_prefix"
+            hsh_hook "$HSH_ROOT" "$hb_repo" "bundle-in" "$HSH_DIR/BUNDLE/root"
+            if hsh_git "$hb_repo" ls-files | grep '^h\.sh$'
+            then
+                hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
+            fi
+            if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
+            then
+                hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
+            fi
+        else
             hsh_die "repository '$hb_repo' does not exists"
         fi
     done
@@ -119,17 +114,26 @@ hsh_bundle() {
     tar -C "$HSH_DIR/BUNDLE" -cz . >> "$hb_name"
     chmod u+x "$hb_name"
 
-    rm -rf "$HSH_DIR/BUNDLE"
+    #rm -rf "$HSH_DIR/BUNDLE"
 }
 
 hsh_clone_cleanup() {
+    hcc_name="$1"
+    shift
+    hcc_prefix="$1"
+    shift
     if [ -e "$HSH_DIR/CLONE" ]
     then
-        if [ -e "$HSH_DIR/repos/$1" ]
+        if [ -e "$HSH_DIR/repos/$hcc_name" ]
         then
-            rm -rf "$HSH_DIR/repos/$1"
+            rm -rf "$HSH_DIR/repos/$hcc_name"
         fi
         rm -rf "$HSH_DIR/CLONE"
+        return 1
+    fi
+    if [ -e "$HSH_ROOT$hcc_prefix/.gitmodules" ]
+    then
+        rm "$HSH_ROOT$hcc_prefix/.gitmodules"
         return 1
     fi
     return 0
@@ -144,12 +148,21 @@ EOF
 }
 
 hsh_clone() {
+    hcl_prefix=""
     while [ $# -ne 0 ]
     do
         case "$1" in
             -h|--help)
                 hsh_clone_usage
                 return 0
+                ;;
+            -p|--prefix)
+                shift
+                if [ $# -eq 0 ]
+                then
+                    hsh_die "missing argument for parameter '--prefix(-p)'"
+                fi
+                hcl_prefix="/$1"
                 ;;
             *)
                 hcl_url="$1"
@@ -168,12 +181,17 @@ hsh_clone() {
 
     if [ ! -e "$HSH_DIR/repos/$hcl_name" ]
     then
-        trap "hsh_clone_cleanup \"$hcl_name\"" EXIT HUP INT QUIT ABRT TERM
+        trap "hsh_clone_cleanup \"$hcl_name\" \"$hcl_prefix\"" EXIT HUP INT QUIT ABRT TERM
         git clone --no-checkout "$hcl_url" "$HSH_DIR/CLONE"
         mv "$HSH_DIR/CLONE/.git" "$HSH_DIR/repos/$hcl_name"
-        hsh_config_repo "$hcl_name"
-        hsh_git "$hcl_name" checkout HEAD 
-        hsh_git "$hcl_name" submodule update --init --recursive
+        hsh_config_repo "$hcl_prefix" "$hcl_name"
+        hsh_git "$hcl_name" checkout HEAD
+        if hsh_git "$hcl_name" ls-files | grep -q '^\.gitmodules$'
+        then
+            hsh_git "$hcl_name" show "HEAD:.gitmodules" > "$HSH_ROOT$hcl_prefix/.gitmodules"
+            hsh_git "$hcl_name" submodule update --init --recursive
+            [ -e "$HSH_ROOT$hcl_prefix/.gitmodules" ] && rm "$HSH_ROOT$hcl_prefix/.gitmodules"
+        fi
         rmdir "$HSH_DIR/CLONE"
     fi
     if hsh_git "$hcl_name" ls-files | grep '^\.hshdependencies$'
@@ -310,11 +328,16 @@ hsh_config() {
 }
 
 hsh_config_repo() {
-    hsh_git "$1" config core.worktree "$HSH_ROOT"
-    hsh_git "$1" config core.sparseCheckout true
-    hsh_git "$1" config pull.rebase true
-    hsh_git "$1" config status.showUntrackedFiles no 
-    cat <<- 'EOF' > "$HSH_DIR/repos/$1/info/sparse-checkout" 
+    hcr_prefix="$1"
+    shift
+    hcr_name="$1"
+    shift
+    [ -e "$HSH_ROOT$hcr_prefix" ] || mkdir -p "$HSH_ROOT$hcr_prefix"
+    hsh_git "$hcr_name" config core.worktree "$HSH_ROOT$hcr_prefix"
+    hsh_git "$hcr_name" config core.sparseCheckout true
+    hsh_git "$hcr_name" config pull.rebase true
+    hsh_git "$hcr_name" config status.showUntrackedFiles no
+    cat <<- 'EOF' > "$HSH_DIR/repos/$hcr_name/info/sparse-checkout"
 		/*
 		!README.md
 		!.gitmodules
@@ -324,7 +347,7 @@ hsh_config_repo() {
 		!.hshdependencies
 		!LICENSE
 		EOF
-    cat <<- 'EOF' >> "$HSH_DIR/repos/$1/info/exclude"
+    cat <<- 'EOF' >> "$HSH_DIR/repos/$hcr_name/info/exclude"
 		README
 		.gitmodules
 		.gitignore
@@ -596,12 +619,21 @@ EOF
 }
 
 hsh_init() {
+    hi_prefix=""
     while [ $# -ne 0 ]
     do
         case "$1" in
             -h|--help)
                 hsh_init_usage
                 return 0
+                ;;
+            -p|--prefix)
+                shift
+                if [ $# -eq 0 ]
+                then
+                    hsh_die "missing parameter for option '--prefix (-p)'"
+                fi
+                hi_prefix="/$1"
                 ;;
             -*)
                 hsh_die "unknown option '$1' for command init"     
@@ -633,8 +665,8 @@ hsh_init() {
     # TODO this should be a bare initialize
     #      and then setup HEAD and master branch config
     git init "$hi_tmp_dir"
-    mv "$hi_tmp_dir/.git" "$hi_repo_dir"        
-    hsh_config_repo "$hi_repo"
+    mv "$hi_tmp_dir/.git" "$hi_repo_dir"
+    hsh_config_repo "$hi_prefix" "$hi_repo"
     rmdir "$hi_tmp_dir"
 }
 
@@ -737,7 +769,12 @@ hsh_submodule_usage() {
 }
 
 hsh_submodule_cleanup() {
-    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
+    if [ -e "$1/.gitmodules" ]
+    then
+        rm "$1/.gitmodules"
+        return 1
+    fi
+    return 0
 }
 
 hsh_submodule() {
@@ -756,11 +793,15 @@ hsh_submodule() {
         esac
         shift
     done
-    trap "hsh_submodule_cleanup" EXIT HUP INT QUIT ABRT TERM
-    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
-    hsh_git "$hs_repo" show "HEAD:.gitmomdules" > "$HSH_ROOT/.gitmodules"
+    hs_prefix="$(hsh_git "$hs_repo" config core.worktree)"
+    trap "hsh_submodule_cleanup \"$hs_prefix\"" EXIT HUP INT QUIT ABRT TERM
+    [ -e "$hs_prefix/.gitmodules" ] && rm "$hs_prefix/.gitmodules"
+    if hsh_git "$hs_repo" ls-files | grep -q '^\.gitmodules$'
+    then
+        hsh_git "$hs_repo" show "HEAD:.gitmodules" > "$hs_prefix/.gitmodules"
+    fi
     hsh_git "$hs_repo" submodule "$@"
-    [ -e "$HSH_ROOT/.gitmodules" ] && rm "$HSH_ROOT/.gitmodules"
+    [ -e "$hs_prefix/.gitmodules" ] && rm "$hs_prefix/.gitmodules"
 }
 
 hsh_url_to_name() {
