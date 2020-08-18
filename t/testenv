@@ -114,6 +114,37 @@ git -C "$TE_DIR/git/package_dep" add \
 git -C "$TE_DIR/git/package_dep" commit -m "initial commit"
 git --git-dir "$TE_DIR/git/package_dep/.git" config core.bare true
 
+mkdir -p "$TE_DIR/git/package_dep_prefix"
+echo "file_dep_prefix content" \
+    > "$TE_DIR/git/package_dep_prefix/file_dep_prefix"
+mkdir -p "$TE_DIR/git/package_dep_prefix/subdir_dep_prefix"
+echo "subfile_dep_prefix content" \
+    > "$TE_DIR/git/package_dep_prefix/subdir_dep_prefix/subfile_dep_prefix"
+cat <<EOF >"$TE_DIR/git/package_dep_prefix/.hshdependencies"
+$TE_DIR/git/simple_package3/.git /dep/prefix
+EOF
+cat << 'EOF' >"$TE_DIR/git/package_dep_prefix/h.sh"
+#! /bin/sh
+case "$HSH_ACTION" in
+    bundle-out)
+        [ -e "simple_package3_created_by_bundle_out" ] || exit 1
+        ;;
+    clone)
+        [ -e "simple_package3_created_by_clone" ] || exit 1
+        ;;
+esac
+EOF
+git -C "$TE_DIR/git/package_dep_prefix" init
+
+git -C "$TE_DIR/git/package_dep_prefix" add \
+    file_dep_prefix \
+    subdir_dep_prefix/subfile_dep_prefix \
+    .hshdependencies \
+    h.sh
+git -C "$TE_DIR/git/package_dep_prefix" commit -m "initial commit"
+git --git-dir "$TE_DIR/git/package_dep_prefix/.git" config core.bare true
+
+
 mkdir -p "$TE_DIR/git/package_dep_deeper"
 echo "file_deeper content" \
     > "$TE_DIR/git/package_dep_deeper/file_deeper"

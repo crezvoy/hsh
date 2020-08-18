@@ -198,7 +198,13 @@ hsh_clone() {
     then
         hsh_git "$hcl_name" show HEAD:.hshdependencies | while IFS= read -r hcl_dep
         do
-            $0 clone "$hcl_dep"
+            hcl_prefix="$(echo "$hcl_dep" | sed 's,\(.*\? \+\),,g')"
+            if [ "$hcl_prefix" = "$hcl_dep" ]; then
+                $0 clone "$hcl_dep"
+            else
+                hcl_repo="$(echo "$hcl_dep" | sed 's,\( \+.*\),,g')"
+                $0 clone --prefix "$hcl_prefix" "$hcl_repo"
+            fi
         done
     fi
     hsh_hook "$HSH_ROOT" "$hcl_name" "clone"
@@ -365,12 +371,21 @@ EOF
 }
 
 hsh_dependency() {
+    hd_prefix=""
     while [ $# -ne 0 ]
     do
         case "$1" in
             -h|--help)
                 hsh_dependency_usage
                 return 0
+                ;;
+            -p|--prefix)
+                shift
+                if [ $# -eq 0 ]
+                then
+                    hsh_die "missing parameter for option '--prefix (-p)'"
+                fi
+                hd_prefix="/$1"
                 ;;
             -*)
                 echo "unknown option '$1'"
@@ -403,21 +418,21 @@ hsh_dependency() {
             $0 clone "$1"
             if hsh_git "$hd_repo" ls-files | grep -q '\.hshdependencies' 
             then
-                hd_sha1="$( (hsh_git "$hd_repo" show HEAD:.hshdependencies; echo $1) | sort -u | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
+                hd_sha1="$( (hsh_git "$hd_repo" show HEAD:.hshdependencies; echo "$1 $hd_prefix") | sort -u | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --add --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+                hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             else
-                hd_sha1="$(echo "$1" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
+                hd_sha1="$(echo "$1 $hd_prefix" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --add --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
-        fi
+                hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+            fi
             ;;
         rm)
             if hsh_git "$hd_repo" ls-files | grep -q '\.hshdependencies' 
             then
-                hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | sed "\,^$1\$,d" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
+                hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | sed "\,^$1,d" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
-        hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
+                hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             fi
             ;;
         *)
