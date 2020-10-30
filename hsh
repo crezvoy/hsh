@@ -841,6 +841,45 @@ hsh_submodule() {
     [ -e "$hs_prefix/.gitmodules" ] && rm "$hs_prefix/.gitmodules"
 }
 
+hsh_sync_usage() {
+    cat <<EOF
+usage: hsh sync <repository>
+EOF
+
+}
+
+hsh_sync() {
+    hsy_message="Sync"
+
+    while [ $# -ne 0 ]
+    do
+        case "$1" in
+            -h|--help)
+                hsh_sync_usage
+                return 0
+                ;;
+            -m|--message)
+                shift
+                if [ $# -eq 0 ]
+                then
+                    hsh_die "missing argument for parameter '--message(-m)'"
+                fi
+                hsy_message="${1}"
+                ;;
+
+            *)
+                hsy_repo="$1"
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+    hsh add "$hsy_repo" -u
+    hsh commit "$hsy_repo" -m "$hsy_message"
+    hsh pull "$hsy_repo" --rebase
+}
+
 hsh_url_to_name() {
     # remove .git or /.git
     hutn_name="${1%.git}"
@@ -941,6 +980,9 @@ case "$h_action" in
         ;;
     submodule)
         hsh_submodule "$@"
+        ;;
+    sync)
+        hsh_sync "$@"
         ;;
     version)
         hsh_version "$@" 
