@@ -519,11 +519,11 @@ hsh_edit() {
     esac
     trap "hsh_edit_cleanup" EXIT HUP INT QUIT ABRT TERM
     if hsh_git "$he_repo" ls-files | grep -q "^$he_target\$"; then
-        hsh_git "$he_repo" show "HEAD:$he_target" > "$HSH_DIR/EDIT"
+        hsh_git "$he_repo" show ":$he_target" > "$HSH_DIR/EDIT"
     else
         if [ "$he_target" = "h.sh" ]
         then
-            hsh_git hsh show HEAD:h.sh.template > "$HSH_DIR/EDIT"
+            hsh_git hsh show :h.sh.template > "$HSH_DIR/EDIT"
         else
             touch "$HSH_DIR/EDIT"
         fi
