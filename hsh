@@ -779,6 +779,28 @@ hsh_remove() {
 
 }
 
+hsh_run_hook() {
+    while [ $# -ne 0 ]
+    do
+        case "$1" in
+            -h|--help)
+                hsh_remove_usage
+                return 0
+                ;;
+            -*)
+                hsh_die "unknown option '$1' for command init"
+                ;;
+            *)
+                hrh_repo="$1"
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+    hsh_hook "$HSH_ROOT" "$hrh_repo" "$1"
+}
+
 hsh_submodule_usage() {
     git submodule -h
 }
@@ -913,6 +935,9 @@ case "$h_action" in
         ;;
     remove)
         hsh_remove "$@"
+        ;;
+    run_hook)
+        hsh_run_hook "$@"
         ;;
     submodule)
         hsh_submodule "$@"
