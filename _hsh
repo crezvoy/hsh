@@ -131,6 +131,24 @@ _hsh_run_hook() {
     fi
 }
 
+_hsh_sync() {
+    local cmd_idx="$1"
+    shift
+    local cword="$COMP_CWORD"
+    local cur="${COMP_WORDS[cword]}"
+    if [ "$cword" -eq "$((cmd_idx + 1))" ]
+    then
+        local repo_dir="$(_hsh_find_root)/.hsh/repos"
+        [ -e "$repo_dir" ] || return 0
+        COMPREPLY=($(compgen -W "$(ls -1 "$repo_dir")" -- "$cur"))
+        return 0
+    fi
+    if [ "$cword" -eq "$((cmd_idx + 2))" ]
+    then
+        COMPREPLY=($(compgen -W "--message" -- "$cur"))
+    fi
+}
+
 _hsh() {
     local cword="$COMP_CWORD"
     local cur=""
@@ -178,7 +196,7 @@ _hsh() {
             COMPREPLY=( $(compgen -o dirnames -- "$cur") )
         else
             local choice="$(git --list-cmds=main,alias,nohelpers)"
-            choice="$choice edit bundle dependency run_hook -h --help --version"
+            choice="$choice edit bundle dependency run_hook sync -h --help --version"
             if [ -z "$has_c" ]
             then
                 choice="$choice -C"
