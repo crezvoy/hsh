@@ -608,7 +608,7 @@ hsh_hook() {
                 export HSH_BUNDLE_ROOT="$hh_bundle_root"
         fi
 
-            hsh_git "$hh_repo" show HEAD:h.sh | sh -s
+            hsh_git "$hh_repo" show :h.sh | sh -s
         )
     fi
 }
