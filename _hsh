@@ -1,4 +1,4 @@
-#! /bin/env bash -i
+#!/bin/env bash -i
 
 if ! declare -F _git > /dev/null && declare -F _completion_loader > /dev/null
 then
@@ -113,6 +113,24 @@ _hsh_edit() {
     fi
 }
 
+_hsh_run_hook() {
+    local cmd_idx="$1"
+    shift
+    local cword="$COMP_CWORD"
+    local cur="${COMP_WORDS[cword]}"
+    if [ "$cword" -eq "$((cmd_idx + 1))" ]
+    then
+        local repo_dir="$(_hsh_find_root)/.hsh/repos"
+        [ -e "$repo_dir" ] || return 0
+        COMPREPLY=($(compgen -W "$(ls -1 "$repo_dir")" -- "$cur"))
+        return 0
+    fi
+    if [ "$cword" -eq "$((cmd_idx + 2))" ]
+    then
+        COMPREPLY=($(compgen -W "$(git --list-cmds=main,alias,nohelpers)" -- "$cur"))
+    fi
+}
+
 _hsh() {
     local cword="$COMP_CWORD"
     local cur=""
@@ -160,7 +178,7 @@ _hsh() {
             COMPREPLY=( $(compgen -o dirnames -- "$cur") )
         else
             local choice="$(git --list-cmds=main,alias,nohelpers)"
-            choice="$choice edit bundle dependency -h --help --version"
+            choice="$choice edit bundle dependency run_hook -h --help --version"
             if [ -z "$has_c" ]
             then
                 choice="$choice -C"
@@ -183,6 +201,9 @@ _hsh() {
             ;;
         edit)
             _hsh_edit "$cmd_idx"
+            ;;
+        run_hook)
+            _hsh_run_hook "$cmd_idx"
             ;;
         *)
             _hsh_default "$cmd" "$cmd_idx"
