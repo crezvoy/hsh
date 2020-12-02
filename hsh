@@ -876,8 +876,9 @@ hsh_sync() {
         shift
     done
     hsh add "$hsy_repo" -u
-    hsh commit "$hsy_repo" -m "$hsy_message"
+    hsh commit "$hsy_repo" -m "$hsy_message" || true
     hsh pull "$hsy_repo" --rebase
+    hsh push "$hsy_repo"
 }
 
 hsh_url_to_name() {
