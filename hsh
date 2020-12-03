@@ -13,13 +13,13 @@ EOF
 }
 
 hsh_bundle_cleanup() {
-    # if [ -e "$HSH_DIR/BUNDLE" ]
-    # then
-    # [ -e "$1" ] && rm "$1"
-    # [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
-    # rm -rf "$HSH_DIR/BUNDLE"
-    # return 1
-    # fi
+    if [ -e "$HSH_DIR/BUNDLE" ]
+    then
+    [ -e "$1" ] && rm "$1"
+    [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
+    rm -rf "$HSH_DIR/BUNDLE"
+    return 1
+    fi
     return 0
 }
 
@@ -114,7 +114,7 @@ hsh_bundle() {
     tar -C "$HSH_DIR/BUNDLE" -cz . >> "$hb_name"
     chmod u+x "$hb_name"
 
-    #rm -rf "$HSH_DIR/BUNDLE"
+    rm -rf "$HSH_DIR/BUNDLE"
 }
 
 hsh_clone_cleanup() {
