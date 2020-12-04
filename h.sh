@@ -1,4 +1,4 @@
-#! /bin/sh -eu
+#! /bin/sh -euC
 
 # this script is called after each git command, after 
 # the 'bundle' and 'remove' command which have no git equivalent, and after the
