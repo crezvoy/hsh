@@ -346,6 +346,7 @@ hsh_config_repo() {
     cat <<- 'EOF' > "$HSH_DIR/repos/$hcr_name/info/sparse-checkout"
 		/*
 		!README.md
+		!.github
 		!.gitmodules
 		!.gitignore
 		!.gitattributes
@@ -355,6 +356,7 @@ hsh_config_repo() {
 		EOF
     cat <<- 'EOF' >> "$HSH_DIR/repos/$hcr_name/info/exclude"
 		README
+		.github
 		.gitmodules
 		.gitignore
 		.gitattributes
