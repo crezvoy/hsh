@@ -603,12 +603,12 @@ hsh_hook() {
             export HSH_ROOT="$hh_root"
             export HSH_REPOSITORY="$hh_repo"
             export HSH_ACTION="$hh_action"
-        if [ -n "${hh_bundle_root-}" ]
-        then
-                export HSH_BUNDLE_ROOT="$hh_bundle_root"
-        fi
+            if [ -n "${hh_bundle_root-}" ]
+            then
+                    export HSH_BUNDLE_ROOT="$hh_bundle_root"
+            fi
 
-            hsh_git "$hh_repo" -C "$HSH_ROOT" show ':h.sh' | sh -si -euC
+            hsh_git "$hh_repo" -C "$HSH_ROOT" show ':h.sh' | sh -seuC
         )
     fi
 }
