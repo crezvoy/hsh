@@ -596,7 +596,7 @@ hsh_hook() {
         hh_bundle_root="$1"
         shift
     fi
-    if hsh_git "$hh_repo" ls-files | grep -q '^h\.sh$' 
+    if hsh_git "$hh_repo" -C "$HSH_ROOT" ls-files | grep -q '^h\.sh$'
     then
         (
             cd "$hh_root"
@@ -608,7 +608,7 @@ hsh_hook() {
                 export HSH_BUNDLE_ROOT="$hh_bundle_root"
         fi
 
-            hsh_git "$hh_repo" show :h.sh | sh -s
+            hsh_git "$hh_repo" -C "$HSH_ROOT" show ':h.sh' | sh -si
         )
     fi
 }
