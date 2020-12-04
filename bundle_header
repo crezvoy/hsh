@@ -35,22 +35,23 @@ run_hook() {
     [ -e "$tmp_dir/hooks/$1" ] || return
     if [ -e "$tmp_dir/dependencies/$1" ]
     then
-    while IFS= read -r entry
-    do
-        d="${entry%.git}"
-        d="${d%/}"
-        d="${d##*/}"
-        run_hook "$d"
-    done < "$tmp_dir/dependencies/$1"
+        while IFS= read -r entry
+        do
+            d="${entry%.git}"
+            d="${d%/}"
+            d="${d##*/}"
+            run_hook "$d"
+        done < "$tmp_dir/dependencies/$1"
     fi
+    echo "# running bundle-out hook for $1"
     (
-    set -ueC
     export HSH_ROOT="$(pwd)"
     export HSH_ACTION="bundle-out"
     export HSH_REPOSITORY="$1"
     export HSH_BUNDLE_ROOT="$tmp_dir/repos"
-    sh $tmp_dir/hooks/$1
+    sh -ueC $tmp_dir/hooks/$1
     )
+    # avoid runing the same hook twice
     rm "$tmp_dir/hooks/$1"
 }
 
