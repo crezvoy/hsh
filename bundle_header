@@ -44,6 +44,7 @@ run_hook() {
     done < "$tmp_dir/dependencies/$1"
     fi
     (
+    set -ueC
     export HSH_ROOT="$(pwd)"
     export HSH_ACTION="bundle-out"
     export HSH_REPOSITORY="$1"
