@@ -67,7 +67,7 @@ bin_dir="${bin_dir:-$(pwd)/bin}"
 tmp_dir="$(pwd)/.hsh_install_$$"
 
 [ -e "$hsh_dir" ] && die "directory '$hsh_dir' already exists"
-[ -e "$bin_dir" ] || die "directory '$bin_dir' does not exists"
+[ -e "$bin_dir" ] || mkdir -p "$bin_dir"
 mkdir "$(pwd)/.hsh_install_$$"
 trap "cleanup \"$tmp_dir\"" EXIT HUP INT QUIT ABRT TERM
 mkdir -p "$hsh_dir/repos"
