@@ -1,8 +1,10 @@
 #!/bin/env bash -i
 
-if ! declare -F _git > /dev/null && declare -F _completion_loader > /dev/null
-then
-    _completion_loader git
+if ! declare -F _git > /dev/null || \
+   ! declare -F __git_wrap__git_main > /dev/null; then
+    if declare -F _completion_loader > /dev/null; then
+        _completion_loader git
+    fi
 fi
 
 _hsh_find_root() {
@@ -62,7 +64,11 @@ _hsh_default() {
     fi
     COMP_LINE="${COMP_WORDS[*]}"
     COMP_POINT="${#COMP_LINE}"
-    _git
+    if declare -F _git >/dev/null; then
+        _git
+    else
+        __git_wrap__git_main
+    fi
 }
 
 _hsh_dependency() {
