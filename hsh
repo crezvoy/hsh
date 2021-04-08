@@ -13,12 +13,11 @@ EOF
 }
 
 hsh_bundle_cleanup() {
-    if [ -e "$HSH_DIR/BUNDLE" ]
-    then
-    [ -e "$1" ] && rm "$1"
-    [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
-    rm -rf "$HSH_DIR/BUNDLE"
-    return 1
+    if [ -e "$HSH_DIR/BUNDLE" ]; then
+        [ -e "$1" ] && rm "$1"
+        [ -e "$HSH_DIR/BUNDLE_LIST" ] && rm "$HSH_DIR/BUNDLE_LIST"
+        rm -rf "$HSH_DIR/BUNDLE"
+        return 1
     fi
     return 0
 }
