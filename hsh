@@ -803,6 +803,50 @@ hsh_run_hook() {
     hsh_hook "$HSH_ROOT" "$hrh_repo" "$1"
 }
 
+hsh_dotgit_usage() {
+    cat <<EOF
+usage: hsh dotgit <repository>
+EOF
+
+}
+
+hsh_dotgit() {
+    while [ $# -ne 0 ]
+    do
+        case "$1" in
+            -h|--help)
+                hsh_remove_usage
+                return 0
+                ;;
+            -*)
+                hsh_die "unknown option '$1' for command dotgit"
+                ;;
+            *)
+                hd_repo="$1"
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+
+    if [ -z "${hd_repo-}" ]
+    then
+        hsh_dotgit_usage
+        return 1
+    fi
+    hd_repo_dir="$HSH_DIR/repos/$hd_repo"
+    if [ ! -e "$hd_repo_dir" ]; then
+        echo "Unknown repo $hd_repo"
+        return 0
+    fi
+    hd_prefix="$(hsh_git "$hd_repo" config core.worktree | sed "s,^$HSH_ROOT,,")"
+    if [ -z "${hd_prefix-}" ]; then
+        hsh_die "cannot create a .git link without a prefix"
+    fi
+    echo "gitdir: $hd_repo_dir" > "$HSH_ROOT$hd_prefix/.git"
+}
+
 hsh_submodule_usage() {
     git submodule -h
 }
@@ -965,6 +1009,9 @@ case "$h_action" in
         ;;
     dependency)
         hsh_dependency "$@"
+        ;;
+    dotgit)
+        hsh_dotgit "$@"
         ;;
     edit)
         hsh_edit "$@"
