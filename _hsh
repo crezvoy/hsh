@@ -202,7 +202,7 @@ _hsh() {
             COMPREPLY=( $(compgen -o dirnames -- "$cur") )
         else
             local choice="$(git --list-cmds=main,alias,nohelpers)"
-            choice="$choice edit bundle dependency run_hook sync dotgit -h --help --version"
+            choice="$choice edit bundle dependency run_hook sync dotgit ls -h --help --version"
             if [ -z "$has_c" ]
             then
                 choice="$choice -C"
