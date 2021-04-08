@@ -117,6 +117,29 @@ hsh_bundle() {
     rm -rf "$HSH_DIR/BUNDLE"
 }
 
+hsh_ls_usage() {
+    cas << EOF
+usage: hsh ls
+
+list repositories
+EOF
+}
+
+hsh_ls() {
+    ls -1 "$HSH_DIR/repos" | while IFS= read -r hl_repo; do
+        hl_git_dir="$HSH_DIR/repos/$hl_repo"
+        hl_worktree="$(hsh_git "$hl_repo" config core.worktree | sed "s,^$HSH_ROOT/\?,,")"
+        if [ -n "${hl_worktree-}" ]; then
+           hl_worktree=" -> $hl_worktree"
+        fi
+        hl_status=""
+        if command -v bash >/dev/null && bash -ic "declare -F __git_ps1" >/dev/null; then
+           hl_status="$(GIT_DIR="$hl_git_dir" GIT_PS1_SHOWCOLORHINTS=1 GIT_PS1_SHOWDIRTYSTATE=1 GIT_PS1_SHOWUPSTREAM=1 bash -ic "__git_ps1" | sed 's,|SPARSE,,')"
+        fi
+        echo "$hl_repo$hl_status$hl_worktree"
+    done
+}
+
 hsh_clone_cleanup() {
     hcc_name="$1"
     shift
@@ -1021,6 +1044,9 @@ case "$h_action" in
         ;;
     init)
         hsh_init "$@"
+        ;;
+    ls)
+        hsh_ls "$@"
         ;;
     remove)
         hsh_remove "$@"
