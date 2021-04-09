@@ -47,9 +47,9 @@ test_completion() {
     local input="$1"
     shift
 
-    local comp="$(get_completion "$input")"
+    local comp="$(get_completion "$input" | sed 's, ,\n,g' | sort)"
 
-    [ "$comp" = "$1" ] \
+    [ "$comp" = "$(echo "$1" | sed 's, ,\n,g' | sort)" ] \
         || test_fail "failed completion.\ninput: $input;\nexpected: $1;\ngot: $comp"
 }
 
