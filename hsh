@@ -1,5 +1,10 @@
 #! /bin/sh -ueC
 
+CPR_CMD="cp -rfP"
+if [ "$(uname -s)" = "Darwin" ]; then
+    CPR_CMD="cp -rf"
+fi
+
 hsh_bundle_usage() {
     cat <<EOF
 usage: hsh bundle [options...]
@@ -72,7 +77,7 @@ hsh_bundle() {
         then
             echo "# $hb_repo"
             hb_prefix="$(hsh_git "$hb_repo" config core.worktree | sed "s,^$HSH_ROOT,,")"
-            cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos"
+            $CPR_CMD "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos"
             hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
             if [ $hb_nr_files -ne 0 ]
             then

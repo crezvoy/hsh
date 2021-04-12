@@ -1,5 +1,11 @@
 #! /bin/sh -ueC
 
+CPR_CMD="cp -rfP"
+if [ "$(uname -s)" = "Darwin" ]; then
+    CPR_CMD="cp -rf"
+fi
+
+
 usage() {
     cat << 'EOF'
 usage: $0 [--work-tree <path>] [--hsh-dir <path>] [--bin <path>]
@@ -112,7 +118,7 @@ do
     fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
 done
 
-cp -rfP "$tmp_dir/repos" "$hsh_dir"
+$CPR_CMD "$tmp_dir/repos" "$hsh_dir"
 
 find "$tmp_dir/root" | while IFS= read -r entry
 do
