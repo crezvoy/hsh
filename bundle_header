@@ -1,8 +1,10 @@
 #! /bin/sh -ueC
 
 CPR_CMD="cp -rfP"
+TAR_CMD="tar -xz --overwrite"
 if [ "$(uname -s)" = "Darwin" ]; then
     CPR_CMD="cp -rf"
+    TAR_CMD="tar -xz"
 fi
 
 
@@ -99,7 +101,7 @@ mkdir "$tmp_dir"
 trap "cleanup \"$tmp_dir\"" EXIT HUP INT QUIT ABRT TERM
 
 BUNDLE_START=$(awk '/^__HSH_BUNDLE_CONTENT__/ { print NR + 1; exit 0; }' "$0")
-tail -n+$BUNDLE_START "$0" | tar -xz --overwrite -C "$tmp_dir" \
+tail -n+$BUNDLE_START "$0" | $TAR_CMD -C "$tmp_dir" \
     || die "fail to extract bundle"
 
 # if [ ! -e "$bin_dir" ]
