@@ -66,7 +66,7 @@ _hsh_default() {
     COMP_POINT="${#COMP_LINE}"
     if declare -F _git >/dev/null; then
         _git
-    else
+    elif declare -F __git_wrap__git_main >/dev/null; then 
         __git_wrap__git_main
     fi
 }
