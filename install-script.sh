@@ -1,5 +1,10 @@
 #! /bin/sh -ueC
 
+CPR_CMD="cp -rfP"
+if [ "$(uname -s)" = "Darwin" ]; then
+    CPR_CMD="cp -rf"
+fi
+
 usage() {
     cat << 'EOF'
 usage: $0 [-C <path>] [--bin <path>]
@@ -72,7 +77,7 @@ mkdir "$(pwd)/.hsh_install_$$"
 trap "cleanup \"$tmp_dir\"" EXIT HUP INT QUIT ABRT TERM
 mkdir -p "$hsh_dir/repos"
 git clone "https://github.com/crezvoy/hsh.git" "$tmp_dir/hsh"
-cp -rfP "$(pwd)/.hsh_install_$$/hsh/.git" "$hsh_dir/repos/hsh"
+$CPR_CMD "$(pwd)/.hsh_install_$$/hsh/.git" "$hsh_dir/repos/hsh"
 git --git-dir "$hsh_dir/repos/hsh" config core.worktree "$bin_dir"
 git --git-dir "$hsh_dir/repos/hsh" config core.sparseCheckout true
 git --git-dir "$hsh_dir/repos/hsh" config pull.rebase true

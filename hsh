@@ -1,5 +1,12 @@
 #! /bin/sh -ueC
 
+CPR_CMD="cp -rfP"
+SED_CMD="sed --posix"
+if [ "$(uname -s)" = "Darwin" ]; then
+    CPR_CMD="cp -rf"
+    SED_CMD="sed"
+fi
+
 hsh_bundle_usage() {
     cat <<EOF
 usage: hsh bundle [options...]
@@ -71,8 +78,8 @@ hsh_bundle() {
         if [ -d "$HSH_DIR/repos/$hb_repo" ]
         then
             echo "# $hb_repo"
-            hb_prefix="$(hsh_git "$hb_repo" config core.worktree | sed "s,^$HSH_ROOT,,")"
-            cp -rfP "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos"
+            hb_prefix="$(hsh_git "$hb_repo" config core.worktree | $SED_CMD "s,^$HSH_ROOT,,")"
+            $CPR_CMD "$HSH_DIR/repos/$hb_repo" "$HSH_DIR/BUNDLE/repos"
             hb_nr_files=$(hsh_git "$hb_repo" ls-files | grep -v '^h\.sh$' | grep -v '^.hshdependencies$' | wc -l)
             if [ $hb_nr_files -ne 0 ]
             then
@@ -99,7 +106,7 @@ hsh_bundle() {
             then
                 hsh_git "$hb_repo" show HEAD:h.sh > "$HSH_DIR/BUNDLE/hooks/$hb_repo"
             fi
-            if hsh_git "$hb_repo" ls-files | grep '^\.hshdependencies$'
+            if hsh_git "$hb_repo" ls-files | grep -q '^\.hshdependencies$'
             then
                 hsh_git "$hb_repo" show HEAD:.hshdependencies > "$HSH_DIR/BUNDLE/dependencies/$hb_repo"
             fi
@@ -127,13 +134,13 @@ EOF
 hsh_ls() {
     ls -1 "$HSH_DIR/repos" | while IFS= read -r hl_repo; do
         hl_git_dir="$HSH_DIR/repos/$hl_repo"
-        hl_worktree="$(hsh_git "$hl_repo" config core.worktree | sed "s,^$HSH_ROOT/\?,,")"
+        hl_worktree="$(hsh_git "$hl_repo" config core.worktree | $SED_CMD "s,^$HSH_ROOT/*,,")"
         if [ -n "${hl_worktree-}" ]; then
            hl_worktree=" -> $hl_worktree"
         fi
         hl_status=""
         if command -v bash >/dev/null && bash -ic "declare -F __git_ps1" >/dev/null; then
-           hl_status="$(GIT_DIR="$hl_git_dir" GIT_PS1_SHOWCOLORHINTS=1 GIT_PS1_SHOWDIRTYSTATE=1 GIT_PS1_SHOWUPSTREAM=1 bash -ic "__git_ps1" | sed 's,|SPARSE,,')"
+           hl_status="$(GIT_DIR="$hl_git_dir" GIT_PS1_SHOWCOLORHINTS=1 GIT_PS1_SHOWDIRTYSTATE=1 GIT_PS1_SHOWUPSTREAM=1 bash -ic "__git_ps1" | $SED_CMD 's,|SPARSE,,')"
         fi
         echo "$hl_repo$hl_status$hl_worktree"
     done
@@ -216,15 +223,15 @@ hsh_clone() {
         fi
         rmdir "$HSH_DIR/CLONE"
     fi
-    if hsh_git "$hcl_name" ls-files | grep '^\.hshdependencies$'
+    if hsh_git "$hcl_name" ls-files | grep -q '^\.hshdependencies$'
     then
         hsh_git "$hcl_name" show HEAD:.hshdependencies | while IFS= read -r hcl_dep
         do
-            hcl_prefix="$(echo "$hcl_dep" | sed 's,\(.*\? \+\),,g')"
+            hcl_prefix="$(echo "$hcl_dep" | $SED_CMD 's,\(^..*  *\),,g')"
             if [ "$hcl_prefix" = "$hcl_dep" ]; then
                 $0 clone "$hcl_dep"
             else
-                hcl_repo="$(echo "$hcl_dep" | sed 's,\( \+.*\),,g')"
+                hcl_repo="$(echo "$hcl_dep" | $SED_CMD 's,\(  *.*$\),,g')"
                 $0 clone --prefix "$hcl_prefix" "$hcl_repo"
             fi
         done
@@ -309,7 +316,7 @@ hsh_completion() {
         if [ -e "$hcom_output"  ]
         then
             mv "$hcom_output" "$hcom_output.$$"
-            sed "/#---8<--- hsh completion rules ---8<---/,/#--->8--- hsh completion rules --->8---/ d"  "$hcom_output.$$" > "$hcom_output"
+            $SED_CMD "/#---8<--- hsh completion rules ---8<---/,/#--->8--- hsh completion rules --->8---/ d"  "$hcom_output.$$" > "$hcom_output"
         fi
         exec 9>>"$hcom_output"
     else
@@ -454,7 +461,7 @@ hsh_dependency() {
         rm)
             if hsh_git "$hd_repo" ls-files | grep -q '\.hshdependencies' 
             then
-                hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | sed "\,^$1,d" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
+                hd_sha1="$(hsh_git "$hd_repo" show HEAD:.hshdependencies | $SED_CMD "\,^$1,d" | hsh_git "$hd_repo" hash-object -t blob -w --stdin)"
                 hsh_git "$hd_repo" update-index --cacheinfo "100644" "$hd_sha1" ".hshdependencies"
                 hsh_git "$hd_repo" update-index --skip-worktree ".hshdependencies"
             fi
@@ -862,7 +869,7 @@ hsh_dotgit() {
         echo "Unknown repo $hd_repo"
         return 0
     fi
-    hd_prefix="$(hsh_git "$hd_repo" config core.worktree | sed "s,^$HSH_ROOT,,")"
+    hd_prefix="$(hsh_git "$hd_repo" config core.worktree | $SED_CMD "s,^$HSH_ROOT,,")"
     if [ -z "${hd_prefix-}" ]; then
         hsh_die "cannot create a .git link without a prefix"
     fi

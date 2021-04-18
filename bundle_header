@@ -1,5 +1,13 @@
 #! /bin/sh -ueC
 
+CPR_CMD="cp -rfP"
+TAR_CMD="tar -xz --overwrite"
+if [ "$(uname -s)" = "Darwin" ]; then
+    CPR_CMD="cp -rf"
+    TAR_CMD="tar -xz"
+fi
+
+
 usage() {
     cat << 'EOF'
 usage: $0 [--work-tree <path>] [--hsh-dir <path>] [--bin <path>]
@@ -27,7 +35,7 @@ cleanup() {
 
 fixup_worktree() {
     mv "$1" "$1.bck"
-    sed "/[ \t]*\[[ \t]*core[ \t]*\]/,/[ \t]*\[/ { s,[ \t]*worktree[ \t]*=[ \t]*\(.*\),worktree=$2\1,g}" "$1.bck" > "$1"
+    sed "/[ \t]*\[[ \t]*core[ \t]*\]/,/[ \t]*\[/ { s,[ \t]*worktree[ \t]*=[ \t]*\(.*\),worktree=$2\1,g; }" "$1.bck" > "$1"
     rm "$1.bck"
 }
 
@@ -93,7 +101,7 @@ mkdir "$tmp_dir"
 trap "cleanup \"$tmp_dir\"" EXIT HUP INT QUIT ABRT TERM
 
 BUNDLE_START=$(awk '/^__HSH_BUNDLE_CONTENT__/ { print NR + 1; exit 0; }' "$0")
-tail -n+$BUNDLE_START "$0" | tar -xz --overwrite -C "$tmp_dir" \
+tail -n+$BUNDLE_START "$0" | $TAR_CMD -C "$tmp_dir" \
     || die "fail to extract bundle"
 
 # if [ ! -e "$bin_dir" ]
@@ -112,7 +120,7 @@ do
     fixup_worktree "$tmp_dir/repos/$repo/config" "$(pwd)"
 done
 
-cp -rfP "$tmp_dir/repos" "$hsh_dir"
+$CPR_CMD "$tmp_dir/repos" "$hsh_dir"
 
 find "$tmp_dir/root" | while IFS= read -r entry
 do

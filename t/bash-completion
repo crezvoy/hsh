@@ -1,5 +1,10 @@
 #! /bin/env bash
 
+# disable completion test on macos for now
+if [ "$(uname -s)" = 'Darwin' ]; then
+    exit 0
+fi
+
 hsh clone git/simple_package/.git
 hsh clone git/simple_package2/.git
 hsh clone git/simple_package3/.git
@@ -13,11 +18,12 @@ EOF
 
 hsh completion -o "completion_script"
 
-if [ -z "$PREFIX" ]
-then
-    BASH_COMPLETION="/usr/share/bash-completion/bash_completion"
-else
+if [ -n "$PREFIX" ]; then
     BASH_COMPLETION="$PREFIX/share/bash-completion/bash_completion"
+elif [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]]; then
+     BASH_COMPLETION="/usr/local/etc/profile.d/bash_completion.sh" 
+elif [[ -r "/usr/share/bash-completion/bash_completion" ]]; then
+    BASH_COMPLETION="/usr/share/bash-completion/bash_completion"
 fi
 
 . "$BASH_COMPLETION"
