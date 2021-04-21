@@ -1,4 +1,4 @@
-#! /bin/sh -ueC
+#! /bin/sh -ueCx
 
 CPR_CMD="cp -rfP"
 SED_CMD="sed --posix"
@@ -589,8 +589,17 @@ hsh_git() {
     then
         ls -1 "$HSH_DIR/repos" | while IFS= read -r hg_repo
         do
+            if [ "$1" = "push" ]; then
+                hg_branch="$(hsh_git "hg_repo" branch --show-current)"
+                hg_remote="$(hsh_git "hg_repo" config "branch.${hg_branch}.remote")"
+                hg_remote_url="$(hsh_git remote get_url "$hg_remote")"
+                if echo "$hg_remote_url" | grep -q "^https://"; then
+                    continue
+                fi
+            fi
             git --git-dir "$HSH_DIR/repos/$hg_repo" "$@" || true
         done
+        true
     else
         git --git-dir "$HSH_DIR/repos/$hg_repo" "$@"
     fi
@@ -604,11 +613,20 @@ hsh_git_with_hook() {
         ls -1 "$HSH_DIR/repos" | while IFS= read -r hg_repo
         do
             echo "# $hg_repo"
+            if [ "$1" = "push" ]; then
+                hg_branch="$(hsh_git "$hg_repo" branch --show-current)"
+                hg_remote="$(hsh_git "$hg_repo" config "branch.${hg_branch}.remote")"
+                hg_remote_url="$(hsh_git "$hg_repo" remote get-url "$hg_remote")"
+                if echo "$hg_remote_url" | grep -q "^https://"; then
+                    continue
+                fi
+            fi
             if git --git-dir "$HSH_DIR/repos/$hg_repo" "$@"
             then
                 hsh_hook "$HSH_ROOT" "$hg_repo" "$1"
             fi
         done
+        true
     else
         git --git-dir "$HSH_DIR/repos/$hg_repo" "$@"
         hsh_hook "$HSH_ROOT" "$hg_repo" "$1"
